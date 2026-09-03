@@ -269,3 +269,20 @@ qsa('.tv-player').forEach(player => {
     player.appendChild(iframe);
   });
 });
+
+
+/* ---------- Depoimentos em vídeo (vertical, arquivo local) ---------- */
+document.querySelectorAll('.vt-player').forEach(function(box){
+  box.addEventListener('click', function(){
+    if (box.classList.contains('is-playing')) return;
+    var src = box.getAttribute('data-src');
+    var v = document.createElement('video');
+    v.src = src; v.controls = true; v.playsInline = true; v.autoplay = true;
+    v.setAttribute('preload','auto');
+    // pausa qualquer outro vídeo tocando
+    document.querySelectorAll('.vt-player.is-playing video').forEach(function(o){o.pause();});
+    box.classList.add('is-playing');
+    box.appendChild(v);
+    v.play().catch(function(){});
+  });
+});
