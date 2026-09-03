@@ -286,3 +286,80 @@ document.querySelectorAll('.vt-player').forEach(function(box){
     v.play().catch(function(){});
   });
 });
+
+
+/* ---------- Carrossel de fotos (auto-drift + setas + arrasto) ---------- */
+qsa('[data-carousel]').forEach(function(viewport){
+  const track  = viewport.firstElementChild;
+  if (!track) return;
+  const name   = viewport.getAttribute('data-carousel');
+  const reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const SPEED  = 0.35;
+  const RESUME = 2500;
+
+  let paused = reduce, idleTimer = null;
+  let pos = 0;
+  let smoothing = false;
+
+  const half = () => track.scrollWidth / 2;
+
+  function wrap(){
+    const h = half(); if (h <= 0) return;
+    if (pos >= h)     { pos -= h; viewport.scrollLeft = pos; }
+    else if (pos < 0) { pos += h; viewport.scrollLeft = pos; }
+  }
+  function tick(){
+    if (!paused && !smoothing){ pos += SPEED; wrap(); viewport.scrollLeft = pos; }
+    requestAnimationFrame(tick);
+  }
+  function hold(resume){
+    if (resume === undefined) resume = true;
+    paused = true; clearTimeout(idleTimer);
+    if (resume && !reduce) idleTimer = setTimeout(function(){ paused = false; }, RESUME);
+  }
+  const step = () => Math.max(240, viewport.clientWidth * 0.8);
+  function go(dir){
+    hold();
+    const h = half();
+    let target = pos + dir * step();
+    if (target < 0)      { pos += h; viewport.scrollLeft = pos; target += h; }
+    else if (target > h) { pos -= h; viewport.scrollLeft = pos; target -= h; }
+    smoothing = true;
+    viewport.scrollTo({ left: target, behavior: 'smooth' });
+    clearTimeout(go._t);
+    go._t = setTimeout(function(){ pos = viewport.scrollLeft; smoothing = false; }, 420);
+  }
+  const prev = qs('[data-carousel-prev="'+name+'"]');
+  const next = qs('[data-carousel-next="'+name+'"]');
+  if (prev) prev.addEventListener('click', function(){ go(-1); });
+  if (next) next.addEventListener('click', function(){ go(1); });
+
+  viewport.addEventListener('mouseenter', function(){ hold(false); });
+  viewport.addEventListener('mouseleave', function(){ if (!reduce) paused = false; });
+  viewport.addEventListener('focusin',    function(){ hold(false); });
+  viewport.addEventListener('focusout',   function(){ if (!reduce) paused = false; });
+  viewport.addEventListener('wheel',      function(){ pos = viewport.scrollLeft; hold(); }, { passive: true });
+  viewport.addEventListener('touchstart', function(){ hold(); }, { passive: true });
+  viewport.addEventListener('touchmove',  function(){ pos = viewport.scrollLeft; }, { passive: true });
+
+  let dragging = false, startX = 0, startLeft = 0, moved = 0;
+  viewport.addEventListener('pointerdown', function(e){
+    if (e.pointerType === 'mouse' && e.button !== 0) return;
+    dragging = true; moved = 0; startX = e.clientX; startLeft = viewport.scrollLeft;
+    smoothing = false; hold(false);
+  });
+  viewport.addEventListener('pointermove', function(e){
+    if (!dragging) return;
+    const dx = e.clientX - startX; moved = Math.abs(dx);
+    if (moved > 4 && viewport.setPointerCapture){ try { viewport.setPointerCapture(e.pointerId); } catch (_) {} }
+    pos = startLeft - dx; wrap(); viewport.scrollLeft = pos;
+  });
+  function endDrag(){ if (!dragging) return; dragging = false; pos = viewport.scrollLeft; hold(); }
+  viewport.addEventListener('pointerup', endDrag);
+  viewport.addEventListener('pointercancel', endDrag);
+  track.addEventListener('click', function(e){
+    if (moved > 6){ e.preventDefault(); e.stopPropagation(); } moved = 0;
+  }, true);
+
+  requestAnimationFrame(function(){ pos = viewport.scrollLeft = 1; tick(); });
+});
