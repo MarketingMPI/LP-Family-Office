@@ -363,3 +363,19 @@ qsa('[data-carousel]').forEach(function(viewport){
 
   requestAnimationFrame(function(){ pos = viewport.scrollLeft = 1; tick(); });
 });
+
+
+/* ---------- Vídeo dentro do carrossel do Club ---------- */
+document.querySelectorAll('.fg-player').forEach(function(box){
+  box.addEventListener('click', function(e){
+    if (box.classList.contains('is-playing')) return;
+    // evita disparar durante arrasto do carrossel
+    var src = box.getAttribute('data-src');
+    var v = document.createElement('video');
+    v.src = src; v.controls = true; v.playsInline = true; v.autoplay = true;
+    v.setAttribute('preload','auto');
+    box.classList.add('is-playing');
+    box.appendChild(v);
+    v.play().catch(function(){});
+  });
+});

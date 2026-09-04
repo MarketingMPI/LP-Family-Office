@@ -1047,6 +1047,17 @@ p{margin:0}
 .fg-item{margin:0;flex:0 0 auto;height:clamp(300px,34vw,400px);overflow:hidden;border-radius:16px;
   border:1px solid color-mix(in oklch,var(--gold) 26%,transparent)}
 .fg-item img{height:100%;width:auto;object-fit:cover;display:block;user-select:none;-webkit-user-drag:none}
+.fg-video{position:relative}
+.fg-player{position:relative;height:100%;cursor:pointer}
+.fg-player img,.fg-player video{height:100%;width:auto;object-fit:cover;display:block}
+.fg-player::after{content:"";position:absolute;inset:0;background:linear-gradient(180deg,transparent 60%,rgba(0,0,0,.4));pointer-events:none;transition:opacity .3s}
+.fg-player.is-playing::after{opacity:0}
+.fg-play{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);z-index:2;
+  width:56px;height:56px;border-radius:50%;border:0;cursor:pointer;display:grid;place-items:center;
+  background:color-mix(in oklch,#fff 92%,transparent);color:#0a0a0a;font-size:26px;
+  box-shadow:0 8px 24px rgba(0,0,0,.35);transition:transform .25s var(--ease)}
+.fg-player:hover .fg-play{transform:translate(-50%,-50%) scale(1.08)}
+.fg-player.is-playing .fg-play{opacity:0;pointer-events:none}
 .foclub-nav{display:flex;justify-content:center;gap:12px;margin-top:clamp(24px,2.6vw,34px)}
 .fcnav{display:grid;place-items:center;width:44px;height:44px;border-radius:50%;
   border:1px solid color-mix(in oklch,var(--gold) 40%,transparent);background:color-mix(in oklch,#fff 45%,transparent);
